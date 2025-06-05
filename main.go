@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -85,7 +86,11 @@ func handleTcpConnection(ctx context.Context, conn net.Conn, logger log.ILogger,
 			buffer := make([]byte, 256)
 			n, err := conn.Read(buffer)
 			if err != nil {
-				logger.Errorf("failed to read from tcp connection - %v", err)
+				if err != io.EOF {
+					logger.Errorf("failed to read from tcp connection - %v", err)
+				} else {
+					logger.Debugf("client(%s) disconnected", conn.RemoteAddr().String())
+				}
 				return
 			}
 			for n >= len(buffer) {
